@@ -2,6 +2,8 @@
 
 namespace ChessGame
 {
+	enum Type{PAWN, KNIGHT, ROOK, BISHOP, QUEEN, KING}
+
 	public class ChessPiece
 	{
 		private Type type;
@@ -19,29 +21,29 @@ namespace ChessGame
 		{
 			switch (type) 
 			{
-			case Type.PAWN:
-				//stuff
-				break;
+				case Type.PAWN:
+					//stuff
+					break;
 
-			case Type.ROOK:
-				//stuff
-				break;
+				case Type.ROOK:
+					//stuff
+					break;
 
-			case Type.BISHOP:
-				//stuff
-				break;
+				case Type.BISHOP:
+					//stuff
+					break;
 
-			case Type.KNIGHT:
-				//stuff
-				break;
+				case Type.KNIGHT:
+					//stuff
+					break;
 
-			case Type.QUEEN:
-				//stuff
-				break;
+				case Type.QUEEN:
+					//stuff
+					break;
 
-			case Type.KING:
-				//stuff
-				break;
+				case Type.KING:
+					//stuff
+					break;
 				
 
 
@@ -58,7 +60,7 @@ namespace ChessGame
 
 	public void Main(String[] args)
 	{
-		enum{PAWN, KNIGHT, ROOK, BISHOP, QUEEN, KING}
+		
 
 
 
