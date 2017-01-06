@@ -3,12 +3,14 @@
 namespace ChessGame
 {
 	enum Type{PAWN, KNIGHT, ROOK, BISHOP, QUEEN, KING}
+	enum Color{BLACK, WHITE}
 
 	public class ChessPiece
 	{
 		private Type type;
 		private bool isAlive;
-		private bool capturedPiece;
+		private Color team;
+
 
 
 		public ChessPiece ()
