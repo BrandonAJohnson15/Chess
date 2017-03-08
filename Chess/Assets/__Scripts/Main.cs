@@ -3,10 +3,14 @@ using System.Collections;
 
 
 
+//enum for types of pieces
 public enum Type { PAWN, KNIGHT, ROOK, BISHOP, QUEEN, KING }
+//enum for teams
 public enum Color { BLACK, WHITE }
+//enum for type of player
 public enum PlayerType {  HUMAN, COMPUTER }
 
+//class for each piece
 public class ChessPiece
 {
     private Type type;
@@ -23,6 +27,7 @@ public class ChessPiece
         this.y = y;
     }
 
+    //getter and setter for X 
     public int X
     {
         get
@@ -34,7 +39,7 @@ public class ChessPiece
             this.x = value;
         }
     }
-
+    //getter and setter for Y
     public int Y
     {
         get
@@ -47,11 +52,13 @@ public class ChessPiece
         }
     }
 
-
+    //returns the type of player
     public Type getPType()
     {
         return type;
     }
+
+    //returns the color
     public Color getColor()
     {
         return team;
@@ -96,6 +103,8 @@ public class Player
 {
     public ChessPiece[] pieces;//array of pieces
     public PlayerType pType;//type of player
+    //correct offset on board for x and y positions
+    //uses the index to arrange pieces on board
     public float[] xPos = { -3.3f, -2.35f, -1.4f, -0.45f, 0.45f, 1.4f, 2.35f, 3.3f };
     public float[] yPos = { 3.25f, 2.30f, 1.35f, 0.45f, -0.45f, -1.35f, -2.30f, -3.25f };
 
@@ -113,6 +122,7 @@ public class Player
 
     public void initializeBoard()
     {
+        //loops through each piece to set up on board
         for (int i = 0; i < pieces.Length; i++)
         {
             string color = (pieces[i].getColor() == Color.WHITE) ? "White" : "Black";
@@ -140,14 +150,18 @@ public class Player
             }
             Debug.Log(color + t);
 
+            //sets the prefab to the piece within the resources folder
             pieces[i].prefab = Object.Instantiate(Resources.Load("ChessPieces/Piece", typeof(GameObject)), 
                 new Vector3(xPos[pieces[i].X], yPos[pieces[i].Y], -1), Quaternion.identity) as GameObject;
+            //gets the correct sprite from the resources folder
             pieces[i].prefab.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("ChessPieces/" + color + t);
         }
     }
 
 }
 
+
+//main class initializes the game
 public class Main : MonoBehaviour
 {
     private bool gameOver;
@@ -158,6 +172,7 @@ public class Main : MonoBehaviour
     // Use this for initialization
 	void Start ()
     {
+        //creates array of pieces for player 1
         ChessPiece[] p1Pieces = { new ChessPiece(Type.PAWN, Color.WHITE, 0,6), new ChessPiece(Type.PAWN, Color.WHITE,1,6),
             new ChessPiece(Type.PAWN, Color.WHITE,2,6), new ChessPiece(Type.PAWN, Color.WHITE,3,6), new ChessPiece(Type.PAWN, Color.WHITE,4,6),
             new ChessPiece(Type.PAWN, Color.WHITE,5,6), new ChessPiece(Type.PAWN, Color.WHITE, 6,6), new ChessPiece(Type.PAWN, Color.WHITE, 7,6),
@@ -165,6 +180,8 @@ public class Main : MonoBehaviour
             new ChessPiece(Type.KING, Color.WHITE,3,7), new ChessPiece(Type.QUEEN, Color.WHITE,4,7), new ChessPiece(Type.BISHOP, Color.WHITE,5,7),
             new ChessPiece(Type.KNIGHT, Color.WHITE, 6,7), new ChessPiece(Type.ROOK, Color.WHITE, 7,7)
         };
+
+        //creates array of pieces for player 2
         ChessPiece[] p2Pieces = { new ChessPiece(Type.PAWN, Color.BLACK, 0,1), new ChessPiece(Type.PAWN, Color.BLACK,1,1),
             new ChessPiece(Type.PAWN, Color.BLACK,2,1), new ChessPiece(Type.PAWN, Color.BLACK,3,1), new ChessPiece(Type.PAWN, Color.BLACK,4,1),
             new ChessPiece(Type.PAWN, Color.BLACK,5,1), new ChessPiece(Type.PAWN, Color.BLACK, 6,1), new ChessPiece(Type.PAWN, Color.BLACK, 7,1),
@@ -173,8 +190,11 @@ public class Main : MonoBehaviour
             new ChessPiece(Type.KNIGHT, Color.BLACK, 6,0), new ChessPiece(Type.ROOK, Color.BLACK, 7,0)
         };
         
+
+        //initializes players
         player1 = new Player(p1Pieces, PlayerType.HUMAN);
         player2 = new Player(p2Pieces, PlayerType.HUMAN);
+        //places piece on the board
         player1.initializeBoard();
         player2.initializeBoard();
 
