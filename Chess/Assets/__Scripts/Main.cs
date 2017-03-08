@@ -103,6 +103,7 @@ public class Player
 {
     public ChessPiece[] pieces;//array of pieces
     public PlayerType pType;//type of player
+    private bool firstTouched = false;
     //correct offset on board for x and y positions
     //uses the index to arrange pieces on board
     public float[] xPos = { -3.3f, -2.35f, -1.4f, -0.45f, 0.45f, 1.4f, 2.35f, 3.3f };
@@ -115,10 +116,24 @@ public class Player
     }
 
     //players turn
-    public void turn()
+    public void checkInput()
     {
+        if (!firstTouched)
+        {
+            firstTouched = true;
+            //gets the first touch position and converts to Vector
+            Vector3 tPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.GetTouch(0).position.x, Input.GetTouch(0).position.y, 0));
+            //Debug.Log("x: " + tPos.x + " y: " + tPos.y);
 
+            foreach (ChessPiece p in pieces)
+                if (xPos[p.X] - .2f <= tPos.x && tPos.x <= xPos[p.X] + .2f
+                        && yPos[p.Y] - .1f <= tPos.y && tPos.y <= yPos[p.Y] + .1f)
+                    Debug.Log(p.X + " " + p.Y + " " + p.getPType());
+            firstTouched = false;
+        }
     }
+
+
 
     public void initializeBoard()
     {
@@ -198,6 +213,18 @@ public class Main : MonoBehaviour
         player1.initializeBoard();
         player2.initializeBoard();
 
+    }
+
+    void Update()
+    {
+        if (turn)
+        {
+            if(player1.pType == PlayerType.HUMAN && Input.touchCount > 0 )
+                player1.checkInput();
+        }
+        else
+            if (player2.pType == PlayerType.HUMAN && Input.touchCount > 0)
+                player2.checkInput();
     }
 	
 
