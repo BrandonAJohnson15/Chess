@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 
 
@@ -10,6 +11,7 @@ public enum Color { BLACK, WHITE }
 //enum for type of player
 public enum PlayerType {  HUMAN, COMPUTER }
 
+
 //class for each piece
 public class ChessPiece
 {
@@ -18,6 +20,18 @@ public class ChessPiece
     private Color team;
     private int x, y;
     public GameObject prefab;
+
+    public ChessPiece()
+    {
+
+    }
+
+    public ChessPiece(int x, int y, GameObject go)
+    {
+        this.x = x;
+        this.y = y;
+        prefab = go;
+    }
 
     public ChessPiece(Type t, Color c, int x, int y)
     {
@@ -64,38 +78,6 @@ public class ChessPiece
         return team;
     }
 
-
-
-    //movement system
-    void move()
-    {
-        switch (type)
-        {
-            case Type.PAWN:
-                //stuff
-                break;
-
-            case Type.ROOK:
-                //stuff
-                break;
-
-            case Type.BISHOP:
-                //stuff
-                break;
-
-            case Type.KNIGHT:
-                //stuff
-                break;
-
-            case Type.QUEEN:
-                //stuff
-                break;
-
-            case Type.KING:
-                //stuff
-                break;
-        }
-    }
 }
 
 
@@ -103,7 +85,8 @@ public class Player
 {
     public ChessPiece[] pieces;//array of pieces
     public PlayerType pType;//type of player
-    private bool firstTouched = false;
+    public Vector3 moveTo = Vector3.zero;
+    public ChessPiece sPiece;
     //correct offset on board for x and y positions
     //uses the index to arrange pieces on board
     public float[] xPos = { -3.3f, -2.35f, -1.4f, -0.45f, 0.45f, 1.4f, 2.35f, 3.3f };
@@ -115,23 +98,7 @@ public class Player
         pType = pT;
     }
 
-    //players turn
-    public void checkInput()
-    {
-        if (!firstTouched)
-        {
-            firstTouched = true;
-            //gets the first touch position and converts to Vector
-            Vector3 tPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.GetTouch(0).position.x, Input.GetTouch(0).position.y, 0));
-            //Debug.Log("x: " + tPos.x + " y: " + tPos.y);
-
-            foreach (ChessPiece p in pieces)
-                if (xPos[p.X] - .2f <= tPos.x && tPos.x <= xPos[p.X] + .2f
-                        && yPos[p.Y] - .1f <= tPos.y && tPos.y <= yPos[p.Y] + .1f)
-                    Debug.Log(p.X + " " + p.Y + " " + p.getPType());
-            firstTouched = false;
-        }
-    }
+   
 
 
 
@@ -163,8 +130,6 @@ public class Player
                     t = "Rook";
                     break;
             }
-            Debug.Log(color + t);
-
             //sets the prefab to the piece within the resources folder
             pieces[i].prefab = Object.Instantiate(Resources.Load("ChessPieces/Piece", typeof(GameObject)), 
                 new Vector3(xPos[pieces[i].X], yPos[pieces[i].Y], -1), Quaternion.identity) as GameObject;
@@ -182,10 +147,12 @@ public class Main : MonoBehaviour
     private bool gameOver;
     private Player player1;
     private Player player2;
+    private bool firstTouched = false;
     private bool turn = true;//true for p1, false for p2
-
+    private List<ChessPiece> potentialMoves;
+    private ChessPiece selectedPiece = new ChessPiece();
     // Use this for initialization
-	void Start ()
+    void Start ()
     {
         //creates array of pieces for player 1
         ChessPiece[] p1Pieces = { new ChessPiece(Type.PAWN, Color.WHITE, 0,6), new ChessPiece(Type.PAWN, Color.WHITE,1,6),
@@ -219,13 +186,220 @@ public class Main : MonoBehaviour
     {
         if (turn)
         {
-            if(player1.pType == PlayerType.HUMAN && Input.touchCount > 0 )
-                player1.checkInput();
+            if (player1.pType == PlayerType.HUMAN && Input.touchCount > 0)
+            {
+                checkInput(player1);
+            }
         }
         else
+        {
             if (player2.pType == PlayerType.HUMAN && Input.touchCount > 0)
-                player2.checkInput();
+            {
+                checkInput(player2);
+            }
+        }
     }
-	
+
+    //players turn
+    public void checkInput(Player player)
+    {
+        bool validPiece = false;
+        if (Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            if (!firstTouched)
+            {
+                firstTouched = true;
+                //gets the first touch position and converts to Vector
+                Vector3 tPos = Camera.main.ScreenToWorldPoint(
+                    new Vector3(Input.GetTouch(0).position.x, Input.GetTouch(0).position.y, 0));
+
+                foreach (ChessPiece p in player.pieces)
+                {
+                    if (player.xPos[p.X] - .45f <= tPos.x && tPos.x <= player.xPos[p.X] + .45f
+                        && player.yPos[p.Y] - .45f <= tPos.y && tPos.y <= player.yPos[p.Y] + .45f)
+                    {
+                        validPiece = true;
+                        player.sPiece = p;
+                    }
+                }
+                if (validPiece)
+                {
+                    selectedPiece.prefab = Object.Instantiate(Resources.Load("ChessPieces/Selected", typeof(GameObject)),
+                        new Vector3(player.xPos[player.sPiece.X], player.yPos[player.sPiece.Y], -.5f), Quaternion.identity) as GameObject;
+                    showMoves(player);
+                }
+                else
+                    firstTouched = false;
+
+            }
+            else//second touch
+            {
+                bool deselect = false;
+                Vector3 tPos = Camera.main.ScreenToWorldPoint(
+                   new Vector3(Input.GetTouch(0).position.x, Input.GetTouch(0).position.y, 0));
+
+                foreach (ChessPiece p in player.pieces)
+                {
+                    if (player.xPos[p.X] - .35f <= tPos.x && tPos.x <= player.xPos[p.X] + .35f
+                        && player.yPos[p.Y] - .35f <= tPos.y && tPos.y <= player.yPos[p.Y] + .35f)
+                    {
+                        if (p.X == player.sPiece.X && p.Y == player.sPiece.Y)//deselect piece
+                        {
+                            deselect = true;
+                            firstTouched = false;
+                            //deletes selected piece
+                            Destroy(selectedPiece.prefab);
+                            //deletes all potential moves
+                            foreach(ChessPiece go in potentialMoves)
+                                Destroy(go.prefab);
+                        }
+                    }
+                }
+
+                if (!deselect)
+                {
+                    bool vMove = false;
+                    int xP = -1;
+                    int yP = -1;
+                    foreach(ChessPiece go in potentialMoves)
+                    {
+                        if(player.xPos[go.X] - .35f <= tPos.x && tPos.x <= player.xPos[go.X] + .35f
+                            && player.yPos[go.Y] - .35f <= tPos.y && tPos.y <= player.yPos[go.Y] + .35f)
+                        {
+                            vMove = true;
+                            xP = go.X;
+                            yP = go.Y;
+                            break;
+                        }
+                    }
+
+                    if(vMove)
+                    {
+                        player.sPiece.X = xP;
+                        player.sPiece.Y = yP;
+                        player.sPiece.prefab.transform.position = new Vector3(player.xPos[player.sPiece.X], player.yPos[player.sPiece.Y], -1);
+                        Destroy(selectedPiece.prefab);
+                        firstTouched = false;
+                        selectedPiece = new ChessPiece();
+                        foreach (ChessPiece g in potentialMoves)
+                            Destroy(g.prefab);
+                        turn = !turn;
+                    }
+                }
+
+            }
+
+        }
+    }
+
+    //movement system
+    public void showMoves(Player player)
+    {
+        potentialMoves = new List<ChessPiece>();
+        switch (player.sPiece.getPType())
+        {
+            case Type.PAWN:
+                bool invalidMove = false;
+
+                if(turn)//player1
+                {
+                    //checks in front of it
+                    foreach (ChessPiece p in player2.pieces)
+                    {
+                        if (p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X)
+                            invalidMove = true;
+                    }
+                    if (!invalidMove && player.sPiece.Y - 1 >= 0)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X, player.sPiece.Y -1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                            new Vector3(player1.xPos[player.sPiece.X], player1.yPos[(player.sPiece.Y - 1)], -.5f), Quaternion.identity) as GameObject));
+                    }
+                    //checks 2 spaces up if on initial position
+                    if(player.sPiece.Y == 6)
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.Y == player.sPiece.Y - 2 && p.X == player.sPiece.X)
+                                invalidMove = true;
+                        }
+                        if (!invalidMove)
+                        {
+                            potentialMoves.Add(new ChessPiece(player.sPiece.X, player.sPiece.Y - 2, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X], player1.yPos[(player.sPiece.Y - 2)], -.5f), Quaternion.identity) as GameObject));
+                        }
+                    }
+                    invalidMove = false;
+                    //checks diagonal
+                    foreach (ChessPiece p in player2.pieces)
+                    {
+                        if (p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X - 1 || p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X + 1)
+                        {
+                            potentialMoves.Add(new ChessPiece(p.X,p.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[p.X], player1.yPos[p.Y], -.5f), Quaternion.identity) as GameObject));
+                        }
+                    }
+                }
+                else//player 2
+                {
+                    //checks in front of it
+                    foreach (ChessPiece p in player1.pieces)
+                    {
+                        if (p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X)
+                            invalidMove = true;
+                    }
+                    if (!invalidMove && player.sPiece.Y + 1 <= 7)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X, player.sPiece.Y + 1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                            new Vector3(player2.xPos[player.sPiece.X], player2.yPos[(player.sPiece.Y + 1)], -.5f), Quaternion.identity) as GameObject));
+                    }
+                    //checks 2 spaces up if on initial position
+                    if (player.sPiece.Y == 1)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.Y == player.sPiece.Y + 2 && p.X == player.sPiece.X)
+                                invalidMove = true;
+                        }
+                        if (!invalidMove)
+                        {
+                            potentialMoves.Add(new ChessPiece(player.sPiece.X, player.sPiece.Y + 2, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player2.xPos[player.sPiece.X], player2.yPos[(player.sPiece.Y + 2)], -.5f), Quaternion.identity) as GameObject));
+                        }
+                    }
+                    invalidMove = false;
+                    //checks diagonal
+                    foreach (ChessPiece p in player1.pieces)
+                    {
+                        if (p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X + 1 || p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X - 1)
+                        {
+                            potentialMoves.Add(new ChessPiece(p.X, p.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[p.X], player1.yPos[p.Y], -.5f), Quaternion.identity) as GameObject));
+                        }
+                    }
+                }
+                break;
+
+            case Type.ROOK:
+                //stuff
+                break;
+
+            case Type.BISHOP:
+                //stuff
+                break;
+
+            case Type.KNIGHT:
+                //stuff
+                break;
+
+            case Type.QUEEN:
+                //stuff
+                break;
+
+            case Type.KING:
+                //stuff
+                break;
+        }
+    }
+
 
 }
