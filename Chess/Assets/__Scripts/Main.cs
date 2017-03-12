@@ -16,7 +16,7 @@ public enum PlayerType {  HUMAN, COMPUTER }
 public class ChessPiece
 {
     private Type type;
-    private bool isAlive;
+    public bool isAlive = true;
     private Color team;
     private int x, y;
     public GameObject prefab;
@@ -151,6 +151,8 @@ public class Main : MonoBehaviour
     private bool turn = true;//true for p1, false for p2
     private List<ChessPiece> potentialMoves;
     private ChessPiece selectedPiece = new ChessPiece();
+    private float offBlackX = -3.3f, offBlackY = 6f, offWhiteX = -3.3f, offWhiteY = -6f;
+    private float offset = .75f;
     // Use this for initialization
     void Start ()
     {
@@ -216,7 +218,7 @@ public class Main : MonoBehaviour
                 foreach (ChessPiece p in player.pieces)
                 {
                     if (player.xPos[p.X] - .45f <= tPos.x && tPos.x <= player.xPos[p.X] + .45f
-                        && player.yPos[p.Y] - .45f <= tPos.y && tPos.y <= player.yPos[p.Y] + .45f)
+                        && player.yPos[p.Y] - .45f <= tPos.y && tPos.y <= player.yPos[p.Y] + .45f && p.isAlive)
                     {
                         validPiece = true;
                         player.sPiece = p;
@@ -278,6 +280,7 @@ public class Main : MonoBehaviour
                         player.sPiece.X = xP;
                         player.sPiece.Y = yP;
                         player.sPiece.prefab.transform.position = new Vector3(player.xPos[player.sPiece.X], player.yPos[player.sPiece.Y], -1);
+                        checkCollisions(player);
                         Destroy(selectedPiece.prefab);
                         firstTouched = false;
                         selectedPiece = new ChessPiece();
@@ -295,31 +298,43 @@ public class Main : MonoBehaviour
     //movement system
     public void showMoves(Player player)
     {
+        bool invalidMove = false;
         potentialMoves = new List<ChessPiece>();
         switch (player.sPiece.getPType())
         {
-            case Type.PAWN:
-                bool invalidMove = false;
 
-                if(turn)//player1
+            case Type.PAWN:
+
+                if (turn)//player1
                 {
                     //checks in front of it
                     foreach (ChessPiece p in player2.pieces)
                     {
-                        if (p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X)
+                        if (p.isAlive && p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X)
+                            invalidMove = true;
+                    }
+                    //checks in front of it
+                    foreach (ChessPiece p in player1.pieces)
+                    {
+                        if (p.isAlive && p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X)
                             invalidMove = true;
                     }
                     if (!invalidMove && player.sPiece.Y - 1 >= 0)
                     {
-                        potentialMoves.Add(new ChessPiece(player.sPiece.X, player.sPiece.Y -1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X, player.sPiece.Y - 1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
                             new Vector3(player1.xPos[player.sPiece.X], player1.yPos[(player.sPiece.Y - 1)], -.5f), Quaternion.identity) as GameObject));
                     }
                     //checks 2 spaces up if on initial position
-                    if(player.sPiece.Y == 6)
+                    if (player.sPiece.Y == 6)
                     {
                         foreach (ChessPiece p in player2.pieces)
                         {
-                            if (p.Y == player.sPiece.Y - 2 && p.X == player.sPiece.X)
+                            if (p.isAlive && p.Y == player.sPiece.Y - 2 && p.X == player.sPiece.X)
+                                invalidMove = true;
+                        }
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.Y == player.sPiece.Y - 2 && p.X == player.sPiece.X)
                                 invalidMove = true;
                         }
                         if (!invalidMove)
@@ -332,10 +347,13 @@ public class Main : MonoBehaviour
                     //checks diagonal
                     foreach (ChessPiece p in player2.pieces)
                     {
-                        if (p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X - 1 || p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X + 1)
+                        if (p.isAlive)
                         {
-                            potentialMoves.Add(new ChessPiece(p.X,p.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
-                                new Vector3(player1.xPos[p.X], player1.yPos[p.Y], -.5f), Quaternion.identity) as GameObject));
+                            if (p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X - 1 || p.Y == player.sPiece.Y - 1 && p.X == player.sPiece.X + 1)
+                            {
+                                potentialMoves.Add(new ChessPiece(p.X, p.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                    new Vector3(player1.xPos[p.X], player1.yPos[p.Y], -.5f), Quaternion.identity) as GameObject));
+                            }
                         }
                     }
                 }
@@ -344,7 +362,12 @@ public class Main : MonoBehaviour
                     //checks in front of it
                     foreach (ChessPiece p in player1.pieces)
                     {
-                        if (p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X)
+                        if (p.isAlive && p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X)
+                            invalidMove = true;
+                    }
+                    foreach (ChessPiece p in player2.pieces)
+                    {
+                        if (p.isAlive && p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X)
                             invalidMove = true;
                     }
                     if (!invalidMove && player.sPiece.Y + 1 <= 7)
@@ -357,7 +380,12 @@ public class Main : MonoBehaviour
                     {
                         foreach (ChessPiece p in player1.pieces)
                         {
-                            if (p.Y == player.sPiece.Y + 2 && p.X == player.sPiece.X)
+                            if (p.isAlive && p.Y == player.sPiece.Y + 2 && p.X == player.sPiece.X)
+                                invalidMove = true;
+                        }
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.Y == player.sPiece.Y + 2 && p.X == player.sPiece.X)
                                 invalidMove = true;
                         }
                         if (!invalidMove)
@@ -370,17 +398,188 @@ public class Main : MonoBehaviour
                     //checks diagonal
                     foreach (ChessPiece p in player1.pieces)
                     {
-                        if (p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X + 1 || p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X - 1)
+                        if (p.isAlive)
                         {
-                            potentialMoves.Add(new ChessPiece(p.X, p.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
-                                new Vector3(player1.xPos[p.X], player1.yPos[p.Y], -.5f), Quaternion.identity) as GameObject));
+                            if (p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X + 1 || p.Y == player.sPiece.Y + 1 && p.X == player.sPiece.X - 1)
+                            {
+                                potentialMoves.Add(new ChessPiece(p.X, p.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                    new Vector3(player1.xPos[p.X], player1.yPos[p.Y], -.5f), Quaternion.identity) as GameObject));
+                            }
                         }
                     }
                 }
                 break;
 
             case Type.ROOK:
-                //stuff
+                int depth = -1;
+                //move right
+                for(int i = player.sPiece.X+1; i <= 7; i++)
+                {
+                    foreach(ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if(cp.isAlive && i == cp.X && player.sPiece.Y == cp.Y)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    foreach(ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.X && player.sPiece.Y == cp.Y)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                }
+                //adds potential moves 
+                if (depth == -1)
+                    depth = 7;
+                for(int i = player.sPiece.X+1; i <= depth; i++)
+                    potentialMoves.Add(new ChessPiece(i, player.sPiece.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[i], player1.yPos[player.sPiece.Y], -.5f), Quaternion.identity) as GameObject));
+                depth = -1;//resets depth
+
+                //move left
+                for (int i = player.sPiece.X-1; i >= 0; i--)
+                {
+                    foreach (ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.X && player.sPiece.Y == cp.Y)
+                        {
+                            if (depth == -1 || i > depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    foreach (ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.X && player.sPiece.Y == cp.Y)
+                        {
+                            if (depth == -1 || i > depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                }
+                //adds potential moves 
+                if (depth == -1)
+                    depth = 7;
+                for (int i = player.sPiece.X-1; i >= depth; i--)
+                    potentialMoves.Add(new ChessPiece(i, player.sPiece.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[i], player1.yPos[player.sPiece.Y], -.5f), Quaternion.identity) as GameObject));
+                depth = -1;//resets depth
+
+                //move down
+                for (int i = player.sPiece.Y+1; i <= 7; i++)
+                {
+                    foreach (ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && player.sPiece.X == cp.X)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    foreach (ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && player.sPiece.X == cp.X)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                }
+                //adds potential moves 
+                if (depth == -1)
+                    depth = 7;
+                for (int i = player.sPiece.Y+1; i <= depth; i++)
+                    potentialMoves.Add(new ChessPiece(player.sPiece.X, i, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[player.sPiece.X], player1.yPos[i], -.5f), Quaternion.identity) as GameObject));
+                depth = -1;//resets depth
+
+
+                //move up
+                for (int i = player.sPiece.Y-1; i >= 0; i--)
+                {
+                    foreach (ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && player.sPiece.X == cp.X)
+                        {
+                            if (depth == -1 || i > depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    foreach (ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && player.sPiece.X == cp.X)
+                        {
+                            if (depth == -1 || i > depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                }
+                //adds potential moves 
+                if (depth == -1)
+                    depth = 7;
+
+                for (int i = player.sPiece.Y; i >= depth; i--)
+                    potentialMoves.Add(new ChessPiece(player.sPiece.X, i, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[player.sPiece.X], player1.yPos[i], -.5f), Quaternion.identity) as GameObject));
                 break;
 
             case Type.BISHOP:
@@ -388,7 +587,223 @@ public class Main : MonoBehaviour
                 break;
 
             case Type.KNIGHT:
-                //stuff
+                if (player.sPiece.X - 2 >= 0 && player.sPiece.Y + 1 <= 7)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 2 && p.Y == player.sPiece.Y + 1)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 2 && p.Y == player.sPiece.Y + 1)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X - 2, player.sPiece.Y + 1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X - 2], player1.yPos[player.sPiece.Y + 1], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
+             
+                if (player.sPiece.X - 2 >= 0 && player.sPiece.Y - 1 >= 0)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 2 && p.Y == player.sPiece.Y - 1)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 2 && p.Y == player.sPiece.Y - 1)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X - 2, player.sPiece.Y - 1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X - 2], player1.yPos[player.sPiece.Y- 1], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
+                if (player.sPiece.X + 2 <= 7 && player.sPiece.Y - 1 >= 0)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 2 && p.Y == player.sPiece.Y - 1)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 2 && p.Y == player.sPiece.Y - 1)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X + 2, player.sPiece.Y - 1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X + 2], player1.yPos[player.sPiece.Y - 1], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
+                if (player.sPiece.X + 2 <= 7 && player.sPiece.Y + 1 <= 7)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 2 && p.Y == player.sPiece.Y + 1)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 2 && p.Y == player.sPiece.Y + 1)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X + 2, player.sPiece.Y + 1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X + 2], player1.yPos[player.sPiece.Y + 1], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
+                if (player.sPiece.X + 1 <= 7 && player.sPiece.Y + 2 <= 7)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 1 && p.Y == player.sPiece.Y + 2)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 1 && p.Y == player.sPiece.Y + 2)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X + 1, player.sPiece.Y + 2, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X + 1], player1.yPos[player.sPiece.Y + 2], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
+                if (player.sPiece.X - 1 >= 0 && player.sPiece.Y + 2 <= 7)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 1 && p.Y == player.sPiece.Y + 2)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 1 && p.Y == player.sPiece.Y + 2)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X - 1, player.sPiece.Y + 2, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X - 1], player1.yPos[player.sPiece.Y + 2], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
+                if (player.sPiece.X + 1 <= 7 && player.sPiece.Y - 2 >= 0)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 1 && p.Y == player.sPiece.Y - 2)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X + 1 && p.Y == player.sPiece.Y - 2)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X + 1, player.sPiece.Y - 2, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X + 1], player1.yPos[player.sPiece.Y - 2], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
+                if (player.sPiece.X - 1 >= 0 && player.sPiece.Y - 2 >= 0)
+                {
+                    if (turn)
+                    {
+                        foreach (ChessPiece p in player1.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 1 && p.Y == player.sPiece.Y - 2)
+                                invalidMove = true;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ChessPiece p in player2.pieces)
+                        {
+                            if (p.isAlive && p.X == player.sPiece.X - 1 && p.Y == player.sPiece.Y - 2)
+                                invalidMove = true;
+                        }
+                    }
+
+                    if (!invalidMove)
+                    {
+                        potentialMoves.Add(new ChessPiece(player.sPiece.X - 1, player.sPiece.Y - 2, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                                new Vector3(player1.xPos[player.sPiece.X - 1], player1.yPos[player.sPiece.Y - 2], -.5f), Quaternion.identity) as GameObject));
+                    }
+                }
+                invalidMove = false;
+
                 break;
 
             case Type.QUEEN:
@@ -398,6 +813,58 @@ public class Main : MonoBehaviour
             case Type.KING:
                 //stuff
                 break;
+        }
+    }
+
+    public void checkCollisions(Player player)
+    {
+        if(turn)
+        {
+            foreach(ChessPiece cp in player2.pieces)
+            {
+                if(player.sPiece.X == cp.X && player.sPiece.Y == cp.Y)
+                {
+                    cp.isAlive = false;
+                    moveOffBoard(cp);
+                }
+            }
+        }
+        else
+        {
+            foreach (ChessPiece cp in player1.pieces)
+            {
+                if (cp.isAlive && player.sPiece.X == cp.X && player.sPiece.Y == cp.Y)
+                {
+                    cp.isAlive = false;
+                    moveOffBoard(cp);
+                }
+            }
+        }
+    }
+
+    public void moveOffBoard(ChessPiece cp)
+    {
+        if(cp.getColor() == Color.BLACK)
+        {
+            cp.prefab.transform.position = new Vector3(offBlackX, offBlackY);
+            if(offBlackX < 3.3f)
+                offBlackX += offset;
+            else
+            {
+                offBlackX = -3.3f;
+                offBlackY -= offset;
+            }
+        }
+        else
+        {
+            cp.prefab.transform.position = new Vector3(offWhiteX, offWhiteY);
+            if (offWhiteX < 3.3f)
+                offWhiteX += offset;
+            else
+            {
+                offWhiteX = -3.3f;
+                offWhiteY += offset;
+            }
         }
     }
 
