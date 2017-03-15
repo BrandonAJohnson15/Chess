@@ -298,9 +298,44 @@ public class Main : MonoBehaviour
     //movement system
     public void showMoves(Player player)
     {
-        bool invalidMove = false;
         potentialMoves = new List<ChessPiece>();
         switch (player.sPiece.getPType())
+        {
+
+            case Type.PAWN:
+                getPMoves(player, Type.PAWN);
+                break;
+
+            case Type.ROOK:
+                getPMoves(player, Type.ROOK);
+                break;
+
+            case Type.BISHOP:
+                getPMoves(player, Type.BISHOP);
+                break;
+
+            case Type.KNIGHT:
+                getPMoves(player, Type.KNIGHT);
+                break;
+
+            case Type.QUEEN:
+                getPMoves(player, Type.ROOK);
+                getPMoves(player, Type.BISHOP);
+                break;
+
+            case Type.KING:
+                getPMoves(player, Type.KING);
+                break;
+        }
+    }
+
+
+    public void getPMoves(Player player, Type t)
+    {
+        int depth = -1;
+        int j;
+        bool invalidMove = false;
+        switch (t)
         {
 
             case Type.PAWN:
@@ -408,17 +443,17 @@ public class Main : MonoBehaviour
                         }
                     }
                 }
+
                 break;
 
             case Type.ROOK:
-                int depth = -1;
                 //move right
-                for(int i = player.sPiece.X+1; i <= 7; i++)
+                for (int i = player.sPiece.X + 1; i <= 7; i++)
                 {
-                    foreach(ChessPiece cp in player1.pieces)
+                    foreach (ChessPiece cp in player1.pieces)
                     {
                         //checks if a piece is blocking path
-                        if(cp.isAlive && i == cp.X && player.sPiece.Y == cp.Y)
+                        if (cp.isAlive && i == cp.X && player.sPiece.Y == cp.Y)
                         {
                             if (depth == -1 || i < depth)
                             {
@@ -430,7 +465,7 @@ public class Main : MonoBehaviour
                             }
                         }
                     }
-                    foreach(ChessPiece cp in player2.pieces)
+                    foreach (ChessPiece cp in player2.pieces)
                     {
                         //checks if a piece is blocking path
                         if (cp.isAlive && i == cp.X && player.sPiece.Y == cp.Y)
@@ -449,13 +484,13 @@ public class Main : MonoBehaviour
                 //adds potential moves 
                 if (depth == -1)
                     depth = 7;
-                for(int i = player.sPiece.X+1; i <= depth; i++)
+                for (int i = player.sPiece.X + 1; i <= depth; i++)
                     potentialMoves.Add(new ChessPiece(i, player.sPiece.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
                         new Vector3(player1.xPos[i], player1.yPos[player.sPiece.Y], -.5f), Quaternion.identity) as GameObject));
                 depth = -1;//resets depth
 
                 //move left
-                for (int i = player.sPiece.X-1; i >= 0; i--)
+                for (int i = player.sPiece.X - 1; i >= 0; i--)
                 {
                     foreach (ChessPiece cp in player1.pieces)
                     {
@@ -487,17 +522,18 @@ public class Main : MonoBehaviour
                             }
                         }
                     }
+
                 }
                 //adds potential moves 
                 if (depth == -1)
-                    depth = 7;
-                for (int i = player.sPiece.X-1; i >= depth; i--)
+                    depth = 0;
+                for (int i = player.sPiece.X - 1; i >= depth; i--)
                     potentialMoves.Add(new ChessPiece(i, player.sPiece.Y, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
                         new Vector3(player1.xPos[i], player1.yPos[player.sPiece.Y], -.5f), Quaternion.identity) as GameObject));
                 depth = -1;//resets depth
 
                 //move down
-                for (int i = player.sPiece.Y+1; i <= 7; i++)
+                for (int i = player.sPiece.Y + 1; i <= 7; i++)
                 {
                     foreach (ChessPiece cp in player1.pieces)
                     {
@@ -533,14 +569,14 @@ public class Main : MonoBehaviour
                 //adds potential moves 
                 if (depth == -1)
                     depth = 7;
-                for (int i = player.sPiece.Y+1; i <= depth; i++)
+                for (int i = player.sPiece.Y + 1; i <= depth; i++)
                     potentialMoves.Add(new ChessPiece(player.sPiece.X, i, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
                         new Vector3(player1.xPos[player.sPiece.X], player1.yPos[i], -.5f), Quaternion.identity) as GameObject));
                 depth = -1;//resets depth
 
 
                 //move up
-                for (int i = player.sPiece.Y-1; i >= 0; i--)
+                for (int i = player.sPiece.Y - 1; i >= 0; i--)
                 {
                     foreach (ChessPiece cp in player1.pieces)
                     {
@@ -575,15 +611,197 @@ public class Main : MonoBehaviour
                 }
                 //adds potential moves 
                 if (depth == -1)
-                    depth = 7;
-
-                for (int i = player.sPiece.Y; i >= depth; i--)
+                    depth = 0;
+                for (int i = player.sPiece.Y - 1; i >= depth; i--)
                     potentialMoves.Add(new ChessPiece(player.sPiece.X, i, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
                         new Vector3(player1.xPos[player.sPiece.X], player1.yPos[i], -.5f), Quaternion.identity) as GameObject));
-                break;
+
+             break;
 
             case Type.BISHOP:
-                //stuff
+                j = player.sPiece.Y - 1;
+                depth = -1;
+                //move up/right
+                for (int i = player.sPiece.X + 1; i <= 7 && j >= 0; i++)
+                {
+
+                    foreach (ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.X && j == cp.Y)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+
+                    foreach (ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.X && j == cp.Y)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    j--;
+                }
+                //adds potential moves 
+                if (depth == -1 && player.sPiece.Y != 0)
+                    depth = 7;
+                j = player.sPiece.Y - 1;
+                for (int i = player.sPiece.X + 1; i <= depth && j >= 0; i++)
+                    potentialMoves.Add(new ChessPiece(i, j, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[i], player1.yPos[j--], -.5f), Quaternion.identity) as GameObject));
+                depth = -1;//resets depth
+                j = player.sPiece.Y - 1;
+
+                //move left/up
+                for (int i = player.sPiece.X - 1; i >= 0 && j >= 0; i--)
+                {
+                    foreach (ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.X && j == cp.Y)
+                        {
+                            if (depth == -1 || i > depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    foreach (ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.X && j == cp.Y)
+                        {
+                            if (depth == -1 || i > depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    j--;
+                }
+                //adds potential moves 
+                if (depth == -1 && player.sPiece.Y != 0)
+                    depth = 0;
+                j = player.sPiece.Y - 1;
+                for (int i = player.sPiece.X - 1; i >= depth && j >= 0; i--)
+                    potentialMoves.Add(new ChessPiece(i, j, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[i], player1.yPos[j--], -.5f), Quaternion.identity) as GameObject));
+                depth = -1;//resets depth
+                j = player.sPiece.X + 1;
+
+                //move down/right
+                for (int i = player.sPiece.Y + 1; i <= 7 && j <= 7; i++)
+                {
+                    foreach (ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && j == cp.X)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    foreach (ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && j == cp.X)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i - 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    j++;
+                }
+                //adds potential moves 
+                if (depth == -1 && player.sPiece.X != 7)
+                    depth = 7;
+                j = player.sPiece.X + 1;
+                for (int i = player.sPiece.Y + 1; i <= depth && j <= 7; i++)
+                    potentialMoves.Add(new ChessPiece(j, i, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[j++], player1.yPos[i], -.5f), Quaternion.identity) as GameObject));
+                depth = -1;//resets depth
+                j = player.sPiece.X - 1;
+
+                //move down/left
+                for (int i = player.sPiece.Y + 1; i <= 7 && j >= 0; i--)
+                {
+                    foreach (ChessPiece cp in player1.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && j == cp.X)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+
+                    }
+                    foreach (ChessPiece cp in player2.pieces)
+                    {
+                        //checks if a piece is blocking path
+                        if (cp.isAlive && i == cp.Y && j == cp.X)
+                        {
+                            if (depth == -1 || i < depth)
+                            {
+                                //if pieces are the same color
+                                if (player.sPiece.getColor() == cp.getColor())
+                                    depth = i + 1;
+                                else
+                                    depth = i;
+                            }
+                        }
+                    }
+                    j--;
+                }
+                //adds potential moves 
+                if (depth == -1 && player.sPiece.X != 0)
+                    depth = 7;
+                j = player.sPiece.X - 1;
+                Debug.Log(depth);
+                for (int i = player.sPiece.Y + 1; i <= depth && j >= 0; i++)
+                    potentialMoves.Add(new ChessPiece(j, i, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
+                        new Vector3(player1.xPos[j--], player1.yPos[i], -.5f), Quaternion.identity) as GameObject));
                 break;
 
             case Type.KNIGHT:
@@ -614,7 +832,7 @@ public class Main : MonoBehaviour
                 }
                 invalidMove = false;
 
-             
+
                 if (player.sPiece.X - 2 >= 0 && player.sPiece.Y - 1 >= 0)
                 {
                     if (turn)
@@ -637,7 +855,7 @@ public class Main : MonoBehaviour
                     if (!invalidMove)
                     {
                         potentialMoves.Add(new ChessPiece(player.sPiece.X - 2, player.sPiece.Y - 1, Object.Instantiate(Resources.Load("ChessPieces/PotentialMoves", typeof(GameObject)),
-                                new Vector3(player1.xPos[player.sPiece.X - 2], player1.yPos[player.sPiece.Y- 1], -.5f), Quaternion.identity) as GameObject));
+                                new Vector3(player1.xPos[player.sPiece.X - 2], player1.yPos[player.sPiece.Y - 1], -.5f), Quaternion.identity) as GameObject));
                     }
                 }
                 invalidMove = false;
@@ -803,16 +1021,13 @@ public class Main : MonoBehaviour
                     }
                 }
                 invalidMove = false;
-
                 break;
 
-            case Type.QUEEN:
-                //stuff
-                break;
 
             case Type.KING:
-                //stuff
+
                 break;
+
         }
     }
 
